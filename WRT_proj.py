@@ -55,7 +55,7 @@ def gate_height_43earth(range_m, elev_rad, Re=6_371_000.0, k=4.0/3.0):
     return np.sqrt(r*r + kRe*kRe + 2.0*r*kRe*np.sin(elev_rad)) - kRe
 
 
-def robust_dealias(radar, vel_field):
+def velo_dealias(radar, vel_field):
     """
     attempts to dealias radial velocity; if it fails, return original field name.
     """
@@ -124,7 +124,8 @@ def make_height_bins(z_agl, z_width=Z_BIN_WIDTH, z_max=Z_MAX):
     """
     bins = np.arange(0.0, z_max + z_width, z_width)
     z_mid = bins[:-1] + 0.5 * z_width
-    # Digitize per gate
+    
+    # digitize per gate
     z_idx = np.digitize(z_agl, bins) - 1
     z_idx[(z_idx < 0) | (z_idx >= len(z_mid))] = -1
     return bins, z_mid, z_idx
@@ -390,7 +391,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("filename", nargs="?", 
-        default="/Users/savannahsouthward/Downloads/KTLX20211027_100132_V06")
+        default="enter-path-to-file")
     args = parser.parse_args()
 
     filename = args.filename 
@@ -401,7 +402,7 @@ def main():
     # optional dealias
     vel_field = VEL_FIELD
     if DEALIAS_FIRST:
-        vel_field = robust_dealias(radar, vel_field)
+        vel_field = velo_dealias(radar, vel_field)
 
     # VAD
     print("[INFO] Computing VAD profile...")
@@ -416,7 +417,7 @@ def main():
                       include_r_term=INCLUDE_R_TERM,
                       lambda_smooth=LAMBDA_SMOOTH)
 
-    # DEBUG SECTION (reduce lambda if data is too smoothed)
+    # DEBUG SECTION (reduce lambda if data is overly smoothed)
     print("\n====== EVAD DIAGNOSTICS ======")
     print("EVAD U (m/s):", ev["U"])
     print("EVAD V (m/s):", ev["V"])
